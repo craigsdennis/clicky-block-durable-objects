@@ -33,7 +33,7 @@ export class Game extends DurableObject {
 		this.sql = ctx.storage.sql;
 		this.sql.exec(`
 			CREATE TABLE IF NOT EXISTS teams (
-    			id INTEGER PRIMARY KEY AUTOINCREMENT,
+    			id TEXT PRIMARY KEY,
     			name TEXT NOT NULL DEFAULT 'tbd',
     			full INTEGER NOT NULL DEFAULT 0 CHECK (full IN (0, 1)),
 				total_clicks INTEGER NOT NULL DEFAULT 0,
@@ -42,39 +42,50 @@ export class Game extends DurableObject {
 		ctx.storage.setAlarm(Date.now() + ALARM_TIME);
 	}
 
-	async addPlayerToAvailableTeam(username: string, country: string | unknown) {
+	async getName(): Promise<string | undefined> {
+		return await this.storage.get("name");
+	}
+
+	async setName(name: string) {
+		return this.storage.put("name", name);
+	}
+
+	async addPlayerToAvailableTeam(username: string, country: string | unknown): Promise<String> {
 		// Find team that isn't full
-		let teamId = null;
-		while (teamId === null) {
+		let teamId: DurableObjectId | undefined = undefined;
+		while (teamId === undefined) {
 			const cursor = this.sql.exec(`SELECT * FROM teams WHERE full = 0`);
 			const first = [...cursor][0];
 			if (first !== undefined) {
-				teamId = first.id;
-				break;
+				if (first.id && typeof first.id === "string") {
+					teamId = this.env.TEAM.idFromString(first.id);
+					break;
+				}
 			}
 			// If there aren't any, create more by inserting team rows
 			// Adds a new team for consideration
-			this.sql.exec('INSERT INTO teams DEFAULT VALUES');
+			teamId = this.env.TEAM.newUniqueId();
+			this.sql.exec('INSERT INTO teams (id) VALUES (?)', teamId.toString());
 		}
-		if (teamId === undefined || typeof teamId !== 'number') {
+		if (teamId === undefined) {
 			throw new Error('Could not get team created');
 		}
 		// Add player
-		const teamStub = await this.getTeamStub(teamId);
-		// TODO: Is there a cleaner way to do this?
-		await teamStub.setTeamId(CURRENT_GAME, teamId);
+		const teamStub = this.env.TEAM.get(teamId);
+		const gameName = (await this.getName()) || CURRENT_GAME;
+		await teamStub.setGameName(gameName);
 		await teamStub.addPlayer(username, country);
 		// Get count, if full, mark as full
 		const playerCount = await teamStub.getPlayerCount();
 		if (playerCount >= this.MAX_PLAYERS) {
-			this.sql.exec(`UPDATE teams SET full=1 WHERE id=?`, teamId);
+			this.sql.exec(`UPDATE teams SET full=1 WHERE id=?`, teamId.toString());
 		}
 		// Return the team id
-		return teamId;
+		return teamId.toString();
 	}
 
-	async getTeamStub(teamId: string | number): Promise<DurableObjectStub<Team>> {
-		const id: DurableObjectId = this.env.TEAM.idFromName(`${CURRENT_GAME}/${teamId}`);
+	async getTeamStub(teamIdString: string): Promise<DurableObjectStub<Team>> {
+		const id: DurableObjectId = this.env.TEAM.idFromString(teamIdString);
 		return this.env.TEAM.get(id);
 	}
 
@@ -83,8 +94,8 @@ export class Game extends DurableObject {
 		const cursor = this.sql.exec(`SELECT * FROM teams WHERE name='tbd' AND full=1`);
 		for (const row of cursor) {
 			// Get Team
-			if (typeof row.id !== 'number') {
-				console.log(`Row id was ${row.id}. Expected number`);
+			if (typeof row.id !== 'string') {
+				console.log(`Row id was ${row.id}. Expected string`);
 				continue;
 			}
 			const teamStub = await this.getTeamStub(row.id);
@@ -99,7 +110,9 @@ export class Game extends DurableObject {
 
 						Your job is create a new creative fun team name based on the makeup of the team.
 
-						Return only the name, do not include an introduction or prefix, just the name.
+						Ensure to incorporate their names an their locations in the creative process.
+
+						Return only the team name, do not include an introduction or prefix, just the team name.
 						`},
 					{role: "user", content: JSON.stringify(info)}
 				],
@@ -117,9 +130,21 @@ export class Game extends DurableObject {
 		}
 	}
 
-	async setTotalClicks(teamId: number, clickCount: number) {
-		this.sql.exec(`UPDATE teams SET total_clicks=? WHERE id=?`, teamId, clickCount);
+	async setTotalClicks(teamIdString: string, clickCount: number) {
+		this.sql.exec(`UPDATE teams SET total_clicks=? WHERE id=?`, clickCount, teamIdString);
 		return true;
+	}
+
+	async leaderboard() {
+		const leaderboard = [];
+		const cursor = this.sql.exec('SELECT * FROM teams ORDER BY total_clicks DESC');
+		for (const row of cursor) {
+			leaderboard.push({
+				name: row.name,
+				clicks: row.total_clicks
+			});
+		}
+		return leaderboard;
 	}
 
 	async alarm() {
@@ -153,10 +178,14 @@ export class Team extends DurableObject {
 		this.storage.setAlarm(Date.now() + ALARM_TIME);
 	}
 
-	async setTeamId(gameId: string, teamId: number) {
-		await this.ctx.storage.put("gameId", gameId);
-		await this.ctx.storage.put("teamId", teamId);
-		return true;
+	async setGameName(gameName: string) {
+		return this.storage.put("gameName", gameName);
+	}
+
+	async getGameStub(): Promise<DurableObjectStub<Game>> {
+		const name: string = (await this.storage.get("gameName")) || CURRENT_GAME;
+		const id = this.env.GAME.idFromName(name);
+		return this.env.GAME.get(id);
 	}
 
 	async addPlayer(username: string, country: string | unknown): Promise<boolean> {
@@ -190,7 +219,7 @@ export class Team extends DurableObject {
 	}
 
 	async getTotalClickCount(): Promise<number> {
-		const cursor = this.sql.exec('SELECT count(*) as totalClickCount FROM clicks');
+		const cursor = this.sql.exec('SELECT count(*) as clickCount FROM clicks');
 		const count = [...cursor][0].clickCount;
 		if (!count || typeof count !== "number") {
 			return 0
@@ -213,24 +242,16 @@ export class Team extends DurableObject {
 	}
 
 	async reportInfo() {
-		const teamId = await this.ctx.storage.get("teamId");
-		if (!teamId || typeof teamId !== "number") {
-			console.error("Team ID is not found");
-			return;
-		}
-		const gameId = await this.ctx.storage.get("gameId");
-		if (!gameId || typeof gameId !== "string") {
-			console.error("Game ID is not found");
-			return;
-		}
-		const id = this.env.GAME.idFromName(gameId);
-		const gameStub = this.env.GAME.get(id);
+		console.log(`Reporting info`);
 		const clickCount = await this.getTotalClickCount();
-		await gameStub.setTotalClicks(teamId, clickCount);
+		const gameStub = await this.getGameStub();
+		const teamIdString = this.ctx.id.toString();
+		console.log(`Updating total clicks of ${clickCount} for ${teamIdString}`)
+		await gameStub.setTotalClicks(teamIdString, clickCount);
 	}
 
 	async alarm() {
-		console.log("Team alarm triggered");
+		console.log("Team Alarm triggered");
 		await this.reportInfo();
 		this.storage.setAlarm(Date.now() + ALARM_TIME);
 	}
@@ -247,17 +268,22 @@ app.post(
 	}),
 	async (c) => {
 		// Use a form
-		const { username } = await c.req.valid('form');
+		const { username } = c.req.valid('form');
 		const country = c.req.raw.cf?.country;
 		// Get the game
 		const id: DurableObjectId = c.env.GAME.idFromName(CURRENT_GAME);
 		const gameStub = c.env.GAME.get(id);
+		// TODO: This is dorky on initialize
+		const name = await gameStub.getName();
+		if (name === undefined) {
+			await gameStub.setName(CURRENT_GAME);
+		}
 		// Add the player
-		const teamId = await gameStub.addPlayerToAvailableTeam(username, country);
+		const teamIdString: string = await gameStub.addPlayerToAvailableTeam(username, country);
 		// Set a cookie
 		setCookie(c, 'username', username);
 		// Redirect to the team page using pathy
-		const playUrl = `/play/${CURRENT_GAME}/${teamId}`;
+		const playUrl = `/play/${CURRENT_GAME}/${teamIdString}`;
 		return c.redirect(playUrl, 302);
 	}
 );
@@ -279,7 +305,7 @@ app.get('/leaderboard/:game', async (c) => {
 
 app.post('/api/click/:game/:teamId', async (c) => {
 	const { game, teamId } = c.req.param();
-	const id: DurableObjectId = c.env.TEAM.idFromName(`${game}/${teamId}`);
+	const id: DurableObjectId = c.env.TEAM.idFromString(teamId);
 	const teamStub = c.env.TEAM.get(id);
 	const username = getCookie(c, 'username');
 	if (!username || typeof username !== 'string') {
@@ -291,11 +317,19 @@ app.post('/api/click/:game/:teamId', async (c) => {
 
 app.get('/api/stats/:game/:teamId', async (c) => {
 	const { game, teamId } = c.req.param();
-	const id: DurableObjectId = c.env.TEAM.idFromName(`${game}/${teamId}`);
+	const id: DurableObjectId = c.env.TEAM.idFromString(teamId);
 	const teamStub = c.env.TEAM.get(id);
 	const stats = await teamStub.getStats();
 	return c.json({ results: stats });
 });
+
+app.get('/api/leaderboard/:game', async (c)=> {
+	const {game} = c.req.param();
+	const id = c.env.GAME.idFromName(game);
+	const gameStub = c.env.GAME.get(id);
+	const leaderboard = await gameStub.leaderboard();
+	return c.json(leaderboard);
+})
 
 export default app;
 /**

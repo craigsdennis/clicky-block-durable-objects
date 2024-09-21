@@ -7,7 +7,7 @@ function getCookie(name) {
 
 // Extract GAME and TEAM from the URL
 const urlParts = window.location.pathname.split('/');
-const game = urlParts[2];  // Assuming URL structure is /play/<GAME>/<TEAM> or /leaderboard/<GAME>
+const game = urlParts[2];  // Assuming URL structure is /play/<GAME>/<TEAM>
 const team = urlParts[3];  // For team pages only
 
 // Set the team name for team pages
@@ -59,31 +59,4 @@ if (document.getElementById('lego-block')) {
 
     // Initial stats fetch
     fetchStats();
-}
-
-// Leaderboard functionality with polling
-if (document.getElementById('leaderboard-list')) {
-    async function fetchLeaderboard() {
-        const response = await fetch(`/api/leaderboard/${game}`);
-        if (response.ok) {
-            const leaderboard = await response.json();
-            const leaderboardList = document.getElementById('leaderboard-list');
-            leaderboardList.innerHTML = '';  // Clear the list
-
-            // Create list items for each team
-            leaderboard.forEach(team => {
-                const listItem = document.createElement('li');
-                listItem.textContent = `${team.name}: ${team.clicks} clicks`;
-                leaderboardList.appendChild(listItem);
-            });
-        } else {
-            console.error('Failed to fetch leaderboard data');
-        }
-    }
-
-    // Poll every 5 seconds
-    setInterval(fetchLeaderboard, 5000);
-
-    // Initial leaderboard fetch
-    fetchLeaderboard();
 }
