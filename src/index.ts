@@ -2,18 +2,19 @@ import { Hono } from 'hono';
 import { DurableObject } from 'cloudflare:workers';
 import { validator } from 'hono/validator';
 import { getCookie, setCookie } from 'hono/cookie';
+// @ts-ignore
 import teamHtml from './team.html';
+// @ts-ignore
 import leaderboardHtml from './leaderboard.html';
 
 const app = new Hono<{ Bindings: Env }>();
-// TODO: idFromName this?
 const CURRENT_GAME = 'builderday';
 // Ten seconds
 const ALARM_TIME = 10 * 1000;
 
 type Stats = {
 	username: string;
-	clickCount: number;
+	clicks: number;
 };
 
 type Player = {
@@ -141,6 +142,7 @@ export class Game extends DurableObject {
 		for (const row of cursor) {
 			leaderboard.push({
 				name: row.name,
+				teamId: row.id,
 				clicks: row.total_clicks
 			});
 		}
@@ -234,7 +236,7 @@ export class Team extends DurableObject {
 			if (typeof row.username === 'string' && typeof row.clickCount === 'number') {
 				stats.push({
 					username: row.username,
-					clickCount: row.clickCount,
+					clicks: row.clickCount,
 				});
 			}
 		}
@@ -246,7 +248,6 @@ export class Team extends DurableObject {
 		const clickCount = await this.getTotalClickCount();
 		const gameStub = await this.getGameStub();
 		const teamIdString = this.ctx.id.toString();
-		console.log(`Updating total clicks of ${clickCount} for ${teamIdString}`)
 		await gameStub.setTotalClicks(teamIdString, clickCount);
 	}
 
@@ -282,6 +283,7 @@ app.post(
 		const teamIdString: string = await gameStub.addPlayerToAvailableTeam(username, country);
 		// Set a cookie
 		setCookie(c, 'username', username);
+		setCookie(c, 'teamId', teamIdString);
 		// Redirect to the team page using pathy
 		const playUrl = `/play/${CURRENT_GAME}/${teamIdString}`;
 		return c.redirect(playUrl, 302);
@@ -328,7 +330,7 @@ app.get('/api/leaderboard/:game', async (c)=> {
 	const id = c.env.GAME.idFromName(game);
 	const gameStub = c.env.GAME.get(id);
 	const leaderboard = await gameStub.leaderboard();
-	return c.json(leaderboard);
+	return c.json({results: leaderboard});
 })
 
 export default app;

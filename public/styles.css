@@ -25,3 +25,9 @@ ul {
     list-style: none;
     padding: 0;
 }
+
+/* General highlight for user and team */
+.highlight {
+    background-color: lightgreen;
+    font-weight: bold;
+}
