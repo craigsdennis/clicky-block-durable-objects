@@ -231,7 +231,7 @@ export class Team extends DurableObject {
 
 	async getStats(): Promise<Stats[]> {
 		const stats: Stats[] = [];
-		const cursor = this.sql.exec(`SELECT username, count(*) as clickCount from clicks GROUP BY 1 ORDER BY clickCount DESC`);
+		const cursor = this.sql.exec(`SELECT username, count(*) as clickCount from clicks GROUP BY username ORDER BY clickCount DESC`);
 		for (const row of cursor) {
 			if (typeof row.username === 'string' && typeof row.clickCount === 'number') {
 				stats.push({
