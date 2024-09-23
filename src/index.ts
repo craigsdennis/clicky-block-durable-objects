@@ -316,25 +316,6 @@ app.get('/api/connect/:game/:teamId/ws', async (c) => {
 	return teamStub.fetch(c.req.raw);
 });
 
-app.post('/api/click/:game/:teamId', async (c) => {
-	const { game, teamId } = c.req.param();
-	const id: DurableObjectId = c.env.TEAM.idFromName(teamId);
-	const teamStub = c.env.TEAM.get(id);
-	const username = getCookie(c, 'username');
-	if (!username || typeof username !== 'string') {
-		return c.json({ success: false, message: 'Bad Username' }, 400);
-	}
-	const success = await teamStub.clickBlock(username);
-	return c.json({ success });
-});
-
-app.get('/api/stats/:game/:teamId', async (c) => {
-	const { game, teamId } = c.req.param();
-	const id: DurableObjectId = c.env.TEAM.idFromName(teamId);
-	const teamStub = c.env.TEAM.get(id);
-	const stats = await teamStub.getStats();
-	return c.json({ results: stats });
-});
 
 app.get('/api/leaderboard/:game', async (c) => {
 	const { game } = c.req.param();
