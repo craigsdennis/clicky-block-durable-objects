@@ -13,11 +13,6 @@ const CURRENT_GAME = 'builderday';
 // Ten seconds
 const ALARM_TIME = 10 * 1000;
 
-type Stats = {
-	username: string;
-	clicks: number;
-};
-
 type Player = {
 	username: string;
 	country: string;
@@ -51,7 +46,7 @@ export class Game extends DurableObject {
 			const cursor = this.sql.exec(`SELECT * FROM teams WHERE full = 0`);
 			const first = [...cursor][0];
 			if (first !== undefined) {
-				if (first.id && typeof first.id === "string") {
+				if (first.id && typeof first.id === 'string') {
 					teamId = first.id;
 					break;
 				}
@@ -94,9 +89,13 @@ export class Game extends DurableObject {
 			// Get Player Info
 			const info = await teamStub.getPlayerInfo();
 			// Run AI to generate name
-			const results = await this.env.AI.run("@cf/meta/llama-3-8b-instruct", {
-				messages: [
-					{role: "system", content: `You are a team name generator for a game called Clicky Block.
+			const results = await this.env.AI.run(
+				'@cf/meta/llama-3-8b-instruct',
+				{
+					messages: [
+						{
+							role: 'system',
+							content: `You are a team name generator for a game called Clicky Block.
 
 						The user is going to give you context about the team members.
 
@@ -105,18 +104,21 @@ export class Game extends DurableObject {
 						Ensure to incorporate their names an their locations in the creative process.
 
 						Return only the team name, do not include an introduction or prefix, just the team name.
-						`},
-					{role: "user", content: JSON.stringify(info)}
-				],
-			}, {
-				gateway: {
-					id: "clicky-block",
-					skipCache: true
+						`,
+						},
+						{ role: 'user', content: JSON.stringify(info) },
+					],
+				},
+				{
+					gateway: {
+						id: 'clicky-block',
+						skipCache: true,
+					},
 				}
-			});
+			);
 			// @ts-ignore: Why no response?
 			const teamName = results.response;
-			console.log("Updating team name:", teamName);
+			console.log('Updating team name:', teamName);
 			// Update team name
 			this.sql.exec(`UPDATE teams SET name=? WHERE id=?`, teamName, row.id);
 		}
@@ -126,7 +128,7 @@ export class Game extends DurableObject {
 		console.log(`Gathering aggregate data`);
 		const cursor = this.sql.exec(`SELECT id FROM teams`);
 		for (const row of cursor) {
-			if (row.id && typeof row.id === "string") {
+			if (row.id && typeof row.id === 'string') {
 				const teamStub = await this.getTeamStub(row.id);
 				const totalClickCount = await teamStub.getTotalClickCount();
 				this.sql.exec(`UPDATE teams SET total_clicks=? WHERE id=?`, totalClickCount, row.id);
@@ -142,7 +144,7 @@ export class Game extends DurableObject {
 			leaderboard.push({
 				name: row.name,
 				teamId: row.id,
-				clicks: row.total_clicks
+				clicks: row.total_clicks,
 			});
 		}
 		return leaderboard;
@@ -213,24 +215,54 @@ export class Team extends DurableObject {
 	async getTotalClickCount(): Promise<number> {
 		const cursor = this.sql.exec('SELECT count(*) as clickCount FROM clicks');
 		const count = [...cursor][0].clickCount;
-		if (!count || typeof count !== "number") {
-			return 0
+		if (!count || typeof count !== 'number') {
+			return 0;
 		}
 		return count;
 	}
 
-	async getStats(): Promise<Stats[]> {
-		const stats: Stats[] = [];
+	async getStats() {
+		const stats = [];
 		const cursor = this.sql.exec(`SELECT username, count(*) as clickCount FROM clicks GROUP BY username ORDER BY clickCount DESC`);
 		for (const row of cursor) {
-			if (typeof row.username === 'string' && typeof row.clickCount === 'number') {
-				stats.push({
-					username: row.username,
-					clicks: row.clickCount,
-				});
-			}
+			stats.push({
+				username: row.username,
+				clicks: row.clickCount,
+			});
 		}
 		return stats;
+	}
+
+	async fetch() {
+		const pair = new WebSocketPair();
+		const [client, server] = Object.values(pair);
+
+		this.ctx.acceptWebSocket(server);
+
+		return new Response(null, {
+			status: 101,
+			webSocket: client,
+		});
+	}
+
+	async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer): void | Promise<void> {
+		const msg = JSON.parse(message as string);
+		switch (msg.type) {
+			case "click":
+				await this.clickBlock(msg.username);
+				break;
+		}
+		// Always broadcast stats
+		const stats = await this.getStats();
+		this.ctx.getWebSockets().forEach(server => {
+			server.send(JSON.stringify({ type: 'stats', stats }));
+		});
+	}
+
+	async webSocketClose(ws: WebSocket, code: number, reason: string, wasClean: boolean): Promise<void> {
+		console.log(`Client WebSocket Closed - ${code}: ${reason} ${wasClean}`);
+		console.log("Closing server");
+		ws.close();
 	}
 }
 
@@ -276,6 +308,14 @@ app.get('/leaderboard/:game', async (c) => {
 	return c.html(leaderboardHtml);
 });
 
+app.get('/api/connect/:game/:teamId/ws', async (c) => {
+	const { teamId } = c.req.param();
+	const id = c.env.TEAM.idFromName(teamId);
+	const teamStub = c.env.TEAM.get(id);
+	return teamStub.fetch(c.req.raw);
+});
+
+
 app.post('/api/click/:game/:teamId', async (c) => {
 	const { game, teamId } = c.req.param();
 	const id: DurableObjectId = c.env.TEAM.idFromName(teamId);
@@ -296,12 +336,12 @@ app.get('/api/stats/:game/:teamId', async (c) => {
 	return c.json({ results: stats });
 });
 
-app.get('/api/leaderboard/:game', async (c)=> {
-	const {game} = c.req.param();
+app.get('/api/leaderboard/:game', async (c) => {
+	const { game } = c.req.param();
 	const id = c.env.GAME.idFromName(game);
 	const gameStub = c.env.GAME.get(id);
 	const leaderboard = await gameStub.leaderboard();
-	return c.json({results: leaderboard});
-})
+	return c.json({ results: leaderboard });
+});
 
 export default app;
