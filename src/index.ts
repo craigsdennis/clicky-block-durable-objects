@@ -127,14 +127,15 @@ export class Game extends DurableObject {
 	async gatherAggregateClicks() {
 		console.log(`Gathering aggregate data`);
 		const cursor = this.sql.exec(`SELECT id FROM teams`);
-		for (const row of cursor) {
+		const promises = [...cursor].map(async (row) => {
 			if (row.id && typeof row.id === 'string') {
 				const teamStub = await this.getTeamStub(row.id);
 				const totalClickCount = await teamStub.getTotalClickCount();
 				this.sql.exec(`UPDATE teams SET total_clicks=? WHERE id=?`, totalClickCount, row.id);
+				return true;
 			}
-		}
-		return true;
+		});
+		return await Promise.allSettled(promises);
 	}
 
 	async leaderboard() {
@@ -248,20 +249,20 @@ export class Team extends DurableObject {
 	async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer): void | Promise<void> {
 		const msg = JSON.parse(message as string);
 		switch (msg.type) {
-			case "click":
+			case 'click':
 				await this.clickBlock(msg.username);
 				break;
 		}
 		// Always broadcast stats
 		const stats = await this.getStats();
-		this.ctx.getWebSockets().forEach(server => {
+		this.ctx.getWebSockets().forEach((server) => {
 			server.send(JSON.stringify({ type: 'stats', stats }));
 		});
 	}
 
 	async webSocketClose(ws: WebSocket, code: number, reason: string, wasClean: boolean): Promise<void> {
 		console.log(`Client WebSocket Closed - ${code}: ${reason} ${wasClean}`);
-		console.log("Closing server");
+		console.log('Closing server');
 		ws.close();
 	}
 }
@@ -314,7 +315,6 @@ app.get('/api/connect/:game/:teamId/ws', async (c) => {
 	const teamStub = c.env.TEAM.get(id);
 	return teamStub.fetch(c.req.raw);
 });
-
 
 app.post('/api/click/:game/:teamId', async (c) => {
 	const { game, teamId } = c.req.param();
