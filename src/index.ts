@@ -36,7 +36,6 @@ export class Game extends DurableObject {
 				total_clicks INTEGER NOT NULL DEFAULT 0,
 				created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 			);`);
-		ctx.storage.setAlarm(Date.now() + ALARM_TIME);
 	}
 
 	async addPlayerToAvailableTeam(username: string, country: string | unknown) {
