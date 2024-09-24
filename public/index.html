@@ -16,11 +16,13 @@
 <body>
     <main>
         <div class="join-container">
-            <h1>Join Clicky Block</h1>
+            <img src="/logo.png" alt="Clicky Block Logo" class="logo">
+            <h1>Welcome to <span class="highlight-text">Clicky Block</span>!</h1>
+            <p class="tagline">Join the fun and compete with players worldwide.</p>
             <form action="/join" method="POST">
-                <label for="username">Enter your username:</label>
+                <label for="username">Enter your username to get started:</label>
                 <input type="text" id="username" name="username" required aria-label="Enter your username" placeholder="Your username">
-                <button type="submit">Join Team</button>
+                <button type="submit">Join the Game</button>
             </form>
         </div>
     </main>
@@ -31,7 +33,5 @@
 
     <!-- Include utils.js -->
     <script src="/utils.js"></script>
-    <!-- Include index.js if you have additional scripts for this page -->
-    <!-- <script src="/index.js"></script> -->
 </body>
 </html>

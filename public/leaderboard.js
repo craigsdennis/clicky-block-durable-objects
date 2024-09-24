@@ -43,22 +43,40 @@ function getCookie(name) {
   }
 
   // Render leaderboard
-  function renderLeaderboard(leaderboard) {
-	leaderboardList.innerHTML = ''; // Clear the list
+  function renderLeaderboard(data) {
+    const leaderboardList = document.getElementById('leaderboard-list');
+    leaderboardList.innerHTML = ''; // Clear any existing content
 
-	leaderboard.forEach((team, index) => {
-	  const listItem = document.createElement('li');
-	  listItem.dataset.teamId = team.teamId; // Use data properties for team ID
-	  listItem.textContent = `#${index + 1} ${team.name}: ${team.clicks} clicks`;
+    data.forEach((team, index) => {
+        const listItem = document.createElement('li');
+        listItem.dataset.teamId = team.teamId;
 
-	  // Highlight the user's team if teamId matches the one in the cookie
-	  if (team.teamId === teamId) {
-		listItem.classList.add('highlight'); // Add a class to highlight the team
-	  }
+        // Create elements for rank, team name, and clicks
+        const rankSpan = document.createElement('div');
+        rankSpan.classList.add('rank');
+        rankSpan.textContent = `#${index + 1}`;
 
-	  leaderboardList.appendChild(listItem);
-	});
-  }
+        const teamNameSpan = document.createElement('div');
+        teamNameSpan.classList.add('team-name');
+        teamNameSpan.textContent = team.name;
+
+        const clicksSpan = document.createElement('div');
+        clicksSpan.classList.add('clicks');
+        clicksSpan.textContent = `${team.clicks} clicks`;
+
+        // Append elements to list item
+        listItem.appendChild(rankSpan);
+        listItem.appendChild(teamNameSpan);
+        listItem.appendChild(clicksSpan);
+
+        // Highlight if the team is the user's team
+        if (team.teamId === teamId) {
+            listItem.classList.add('highlight');
+        }
+
+        leaderboardList.appendChild(listItem);
+    });
+}
 
   // Set up polling with increased interval and clear on unload
   const intervalId = setInterval(fetchLeaderboard, 30000); // Poll every 30 seconds

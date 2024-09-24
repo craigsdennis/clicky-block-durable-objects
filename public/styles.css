@@ -1,7 +1,22 @@
+/* styles.css */
+
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+/* Root variables */
+:root {
+    --primary-color: #ff6f61;
+    --secondary-color: #ffcccb;
+    --background-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    --text-color: #333;
+    --highlight-color: #ff6f61;
+}
+
 /* General body styling */
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
+    font-family: 'Roboto', sans-serif;
+    background: var(--background-gradient);
+    color: var(--text-color);
     margin: 0;
     padding: 0;
 }
@@ -24,32 +39,184 @@ footer p {
 
 /* Adjust main content to not overlap with fixed footer */
 main {
-    padding-bottom: 60px; /* Adjust according to footer height */
+    padding-bottom: 80px; /* Adjust according to footer height */
+}
+
+/* Logo Styling */
+.logo {
+    max-width: 150px;
+    display: block;
+    margin: 0 auto 20px auto;
+}
+
+/* Highlighted text */
+.highlight-text {
+    color: var(--highlight-color);
+}
+
+/* Tagline styling */
+.tagline {
+    font-size: 18px;
+    margin-bottom: 30px;
+    color: #555;
+}
+
+/* Join Container Styling */
+.join-container {
+    background-color: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(5px);
+    border-radius: 10px;
+    padding: 40px 30px;
+    max-width: 400px;
+    margin: 100px auto;
+    text-align: center;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.15);
+}
+
+.join-container h1 {
+    font-size: 36px;
+    margin-bottom: 10px;
+}
+
+.join-container form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.join-container label {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.join-container input[type="text"] {
+    padding: 12px 15px;
+    font-size: 16px;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 300px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.join-container button {
+    padding: 12px 20px;
+    font-size: 18px;
+    background-color: var(--primary-color);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.join-container button:hover {
+    background-color: #e65b50;
+}
+
+/* Leaderboard Container Styling */
+.leaderboard-container {
+    background-color: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(5px);
+    border-radius: 10px;
+    padding: 40px 30px;
+    max-width: 800px;
+    margin: 80px auto;
+    text-align: center;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.15);
+}
+
+.leaderboard-container h1 {
+    font-size: 36px;
+    margin-bottom: 10px;
+}
+
+.leaderboard-container .tagline {
+    font-size: 18px;
+    margin-bottom: 30px;
+    color: #555;
+}
+
+/* Leaderboard list styling */
+#leaderboard-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#leaderboard-list li {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 18px;
+    position: relative;
+}
+
+#leaderboard-list li .rank {
+    font-size: 24px;
+    font-weight: bold;
+    width: 50px;
+}
+
+#leaderboard-list li .team-name {
+    flex-grow: 1;
+    text-align: left;
+    margin-left: 10px;
+}
+
+#leaderboard-list li .clicks {
+    font-weight: bold;
+}
+
+#leaderboard-list li.highlight {
+    background-color: var(--secondary-color);
+}
+
+#leaderboard-list li.highlight .rank {
+    color: var(--primary-color);
+}
+
+#leaderboard-list li:first-child {
+    background-color: #ffd700;
+}
+
+#leaderboard-list li:nth-child(2) {
+    background-color: #c0c0c0;
+}
+
+#leaderboard-list li:nth-child(3) {
+    background-color: #cd7f32;
 }
 
 /* Team Container Styling */
 .team-container {
-    background-color: white;
+    background-color: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(5px);
     border-radius: 10px;
-    padding: 20px;
+    padding: 40px 30px;
     max-width: 900px;
-    width: 90%;
     margin: 80px auto;
     text-align: center;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.15);
 }
 
 .team-container h1 {
-    font-size: 32px;
-    margin-bottom: 20px;
+    font-size: 36px;
+    margin-bottom: 10px;
 }
 
-/* Styling for the block image */
+.team-container .tagline {
+    font-size: 18px;
+    margin-bottom: 30px;
+    color: #555;
+}
+
 .block-container img {
     max-width: 150px;
     height: auto;
     display: block;
-    margin: 0 auto 20px auto; /* Center the block and add margin below */
+    margin: 0 auto 20px auto;
     cursor: pointer;
     transition: transform 0.1s;
 }
@@ -58,7 +225,6 @@ main {
     transform: scale(0.95);
 }
 
-/* Stats Container */
 .stats-container {
     margin-top: 20px;
 }
@@ -79,19 +245,21 @@ main {
 /* Stats Sections */
 .stats-section,
 .country-stats-section {
-    background-color: #fafafa;
-    padding: 15px;
-    border-radius: 5px;
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 10px;
     box-sizing: border-box;
     flex: 1 1 45%; /* Adjusts width and allows wrapping on smaller screens */
     min-width: 300px; /* Minimum width before wrapping */
     text-align: left;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
 }
 
 .stats-section h3,
 .country-stats-section h3 {
     font-size: 24px;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
+    color: var(--highlight-color);
 }
 
 /* List styling for stats */
@@ -102,7 +270,6 @@ main {
     margin: 0;
 }
 
-/* List items for stats */
 .stats-section ul li,
 .country-stats-section ul li {
     padding: 10px 0;
@@ -111,9 +278,14 @@ main {
     position: relative;
 }
 
+.stats-section ul li:last-child,
+.country-stats-section ul li:last-child {
+    border-bottom: none;
+}
+
 /* Highlighted user/team styling */
 .highlight {
-    background-color: #fffbcc;
+    background-color: var(--secondary-color);
     font-weight: bold;
 }
 
@@ -138,27 +310,55 @@ main {
 
 @media (max-width: 600px) {
     /* Adjust main containers */
+    .join-container,
+    .leaderboard-container,
     .team-container {
         width: 95%;
         margin: 60px auto;
-        padding: 20px;
+        padding: 30px 20px;
     }
 
     /* Adjust headings */
-    .team-container h1,
-    .stats-container h2 {
+    .join-container h1,
+    .leaderboard-container h1,
+    .team-container h1 {
         font-size: 28px;
     }
 
-    .stats-section h3,
-    .country-stats-section h3 {
-        font-size: 22px;
+    .tagline {
+        font-size: 16px;
     }
 
     /* Adjust font sizes */
+    .join-container label,
+    .join-container input[type="text"],
+    .join-container button,
+    #leaderboard-list li,
+    .stats-section h3,
+    .country-stats-section h3,
     .stats-section ul li,
     .country-stats-section ul li {
         font-size: 16px;
+    }
+
+    /* Leaderboard list adjustments */
+    #leaderboard-list li {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    #leaderboard-list li .rank {
+        font-size: 20px;
+        width: auto;
+    }
+
+    #leaderboard-list li .team-name {
+        margin-left: 0;
+        margin-top: 5px;
+    }
+
+    #leaderboard-list li .clicks {
+        margin-top: 5px;
     }
 
     /* Adjust block image */
@@ -171,14 +371,14 @@ main {
 
 /* Input field focus state */
 input[type="text"]:focus {
-    border-color: #80bdff;
+    border-color: var(--primary-color);
     outline: none;
 }
 
 /* Button hover and focus states */
 button:hover,
 button:focus {
-    background-color: #218838;
+    background-color: #e65b50;
     outline: none;
 }
 
