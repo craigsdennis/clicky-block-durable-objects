@@ -7,7 +7,7 @@
     <meta property="og:title" content="Clicky Block - Team Page">
     <meta property="og:description" content="Join your team in Clicky Block and climb the leaderboard!">
     <meta property="og:image" content="/images/team-page-thumbnail.png">
-    <meta property="og:url" content="https://yourwebsite.com/team">
+    <meta property="og:url" content="https://yourwebsite.com/team/<GAME>">
     <meta property="og:type" content="website">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clicky Block - Team Page</title>
@@ -40,11 +40,17 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Placement Message -->
+            <div class="placement-message" id="placement-message">
+                <!-- The message will be updated via JavaScript -->
+            </div>
         </div>
     </main>
 
     <footer>
-        <p>Built with 🧡 using Cloudflare Workers and Durable Objects</p>
+        <p>Built with 🧡 using <a href="https://developers.cloudflare.com">Cloudflare Workers</a>, <a href="https://developers.cloudflare.com/workers-ai">Workers AI</a>, and <a href="https://developers.cloudflare.com/durable-objects">Durable Objects</a></p>
+        <p>Your <a href="https://www.cloudflare.com/privacypolicy/">privacy is super important</a> to us. 👀 <a href="https://github.com/craigsdennis/clicky-block-durable-objects">the code</a>.</p>
     </footer>
 
     <!-- Include necessary scripts -->

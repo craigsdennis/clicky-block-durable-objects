@@ -155,6 +155,21 @@ export class Game extends DurableObject {
 		}
 		return leaderboard;
 	}
+
+	async teamPlacement(teamId: string): Promise<Array<number>> {
+		const rowCursor = this.sql.exec(`SELECT place FROM (
+			SELECT
+				id,
+				ROW_NUMBER() OVER (ORDER BY total_clicks DESC) as place
+			FROM
+				teams
+			) as ranked
+			 WHERE id=?`, teamId);
+		const rowNumber = rowCursor.raw().next().value[0];
+		const totalCount = this.sql.exec(`SELECT count(*) FROM teams;`).raw().next().value[0];
+		// Place of Total
+		return [rowNumber, totalCount];
+	}
 }
 
 export class Team extends DurableObject {
@@ -358,11 +373,21 @@ app.post(
 		// Set a cookie
 		setCookie(c, 'username', safeUsername);
 		setCookie(c, 'teamId', teamId);
+		setCookie(c, 'game', CURRENT_GAME);
 		// Redirect to the team page using pathy
 		const playUrl = `/play/${CURRENT_GAME}/${teamId}`;
 		return c.redirect(playUrl, 302);
 	}
 );
+
+app.get('/play', async (c) => {
+	const username = getCookie(c, 'username');
+	const teamId = getCookie(c, 'teamId');
+	if (username && teamId) {
+		return c.redirect(`/play/${CURRENT_GAME}/${teamId}`)
+	}
+	return c.redirect("/");
+})
 
 app.get('/play/:game/:teamId', async (c) => {
 	const username = getCookie(c, 'username');
@@ -393,5 +418,14 @@ app.get('/api/leaderboard/:game', async (c) => {
 	const leaderboard = await gameStub.leaderboard();
 	return c.json({ results: leaderboard });
 });
+
+app.get('/api/leaderboard/placement/:game/:teamId', async (c) => {
+	const { game, teamId } = c.req.param();
+	const id = c.env.GAME.idFromName(game);
+	const gameStub = c.env.GAME.get(id);
+	const [placement, totalCount] = await gameStub.teamPlacement(teamId);
+	return c.json({ placement, totalCount });
+});
+
 
 export default app;

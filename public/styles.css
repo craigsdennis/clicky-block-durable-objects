@@ -5,11 +5,11 @@
 
 /* Root variables */
 :root {
-    --primary-color: #ff6f61;
-    --secondary-color: #ffcccb;
-    --background-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    --primary-color: #ff6f61; /* Coral */
+    --secondary-color: #ffe6e1; /* Light Coral */
+    --background-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); /* Light blue gradient */
     --text-color: #333;
-    --highlight-color: #ff6f61;
+    --highlight-color: #ff6f61; /* Coral */
 }
 
 /* General body styling */
@@ -26,20 +26,28 @@ footer {
     background-color: #333;
     color: #fff;
     text-align: center;
-    padding: 15px 0;
-    position: fixed;
+    padding: 20px 15px;
+    position: relative; /* Changed from fixed to relative */
     width: 100%;
-    bottom: 0;
 }
 
 footer p {
-    margin: 0;
+    margin: 5px 0;
     font-size: 14px;
 }
 
-/* Adjust main content to not overlap with fixed footer */
+footer a {
+    color: #fff;
+    text-decoration: underline;
+}
+
+footer a:hover {
+    color: var(--highlight-color);
+}
+
+/* Remove bottom padding from main since footer is not fixed */
 main {
-    padding-bottom: 80px; /* Adjust according to footer height */
+    padding-bottom: 0;
 }
 
 /* Logo Styling */
@@ -151,12 +159,14 @@ main {
     border-bottom: 1px solid #e0e0e0;
     font-size: 18px;
     position: relative;
+    background-color: transparent; /* Remove background color */
 }
 
 #leaderboard-list li .rank {
     font-size: 24px;
     font-weight: bold;
     width: 50px;
+    text-align: center;
 }
 
 #leaderboard-list li .team-name {
@@ -169,6 +179,7 @@ main {
     font-weight: bold;
 }
 
+/* Highlight the user's team */
 #leaderboard-list li.highlight {
     background-color: var(--secondary-color);
 }
@@ -177,16 +188,24 @@ main {
     color: var(--primary-color);
 }
 
-#leaderboard-list li:first-child {
-    background-color: #ffd700;
+/* Remove background colors for top positions */
+#leaderboard-list li.top-1,
+#leaderboard-list li.top-2,
+#leaderboard-list li.top-3 {
+    background-color: transparent;
+    color: inherit;
 }
 
-#leaderboard-list li:nth-child(2) {
-    background-color: #c0c0c0;
+/* Position the medal icons */
+#leaderboard-list li {
+    position: relative;
+    padding-left: 60px; /* Adjust padding to accommodate the medal icon */
 }
 
-#leaderboard-list li:nth-child(3) {
-    background-color: #cd7f32;
+#leaderboard-list li .medal {
+    position: absolute;
+    left: 15px;
+    font-size: 24px;
 }
 
 /* Team Container Styling */
@@ -212,11 +231,12 @@ main {
     color: #555;
 }
 
+/* Styling for the block image */
 .block-container img {
     max-width: 150px;
     height: auto;
     display: block;
-    margin: 0 auto 20px auto;
+    margin: 0 auto 20px auto; /* Center the block and add margin below */
     cursor: pointer;
     transition: transform 0.1s;
 }
@@ -225,6 +245,7 @@ main {
     transform: scale(0.95);
 }
 
+/* Stats Container */
 .stats-container {
     margin-top: 20px;
 }
@@ -284,15 +305,33 @@ main {
 }
 
 /* Highlighted user/team styling */
-.highlight {
+.stats-section ul li.highlight,
+.country-stats-section ul li.highlight {
     background-color: var(--secondary-color);
     font-weight: bold;
 }
 
-.highlight::before {
+.stats-section ul li.highlight::before,
+.country-stats-section ul li.highlight::before {
     content: '⭐';
     position: absolute;
     left: -25px;
+}
+
+/* Placement Message Styling */
+.placement-message {
+    margin-top: 30px;
+    font-size: 20px;
+    color: var(--text-color);
+}
+
+.placement-message a {
+    color: var(--highlight-color);
+    text-decoration: underline;
+}
+
+.placement-message a:hover {
+    color: var(--primary-color);
 }
 
 /* Responsive adjustments */
@@ -337,7 +376,8 @@ main {
     .stats-section h3,
     .country-stats-section h3,
     .stats-section ul li,
-    .country-stats-section ul li {
+    .country-stats-section ul li,
+    .placement-message {
         font-size: 16px;
     }
 
@@ -345,6 +385,7 @@ main {
     #leaderboard-list li {
         flex-direction: column;
         align-items: flex-start;
+        padding-left: 20px; /* Reduce padding on mobile */
     }
 
     #leaderboard-list li .rank {
@@ -361,13 +402,16 @@ main {
         margin-top: 5px;
     }
 
+    /* Adjust medal icon position on mobile */
+    #leaderboard-list li .medal {
+        left: 0;
+    }
+
     /* Adjust block image */
     .block-container img {
         max-width: 120px;
     }
 }
-
-/* Additional Styles */
 
 /* Input field focus state */
 input[type="text"]:focus {
@@ -395,4 +439,23 @@ body::-webkit-scrollbar-thumb {
     background-color: #888;
     border-radius: 5px;
     border: 2px solid #f4f4f4;
+}
+
+.play-more {
+    margin-top: 30px;
+    font-size: 20px;
+}
+
+.play-more p {
+    margin: 0;
+}
+
+.play-more a {
+    color: var(--highlight-color);
+    text-decoration: underline;
+    font-weight: bold;
+}
+
+.play-more a:hover {
+    color: var(--primary-color);
 }
