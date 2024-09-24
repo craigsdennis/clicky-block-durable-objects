@@ -8,8 +8,8 @@ function getCookie(name) {
 
 // Extract GAME and TEAM from the URL
 const urlParts = window.location.pathname.split('/');
-const game = urlParts[2]; // Assuming URL structure is /play/<GAME>/<TEAM>
-const teamId = urlParts[3]; // For team pages only
+const game = urlParts[2];  // Assuming URL structure is /play/<GAME>/<TEAM>
+const teamId = urlParts[3];  // For team pages only
 
 // Get the username from the cookie
 const username = getCookie('username');
@@ -32,44 +32,50 @@ function connect() {
 	const ws = new WebSocket(websocketServerUrl);
 
 	ws.onopen = () => {
-		console.log('Opening!');
+		console.log('Connected to WebSocket!');
 	};
 
 	ws.onmessage = (message) => {
 		const data = JSON.parse(message.data);
 		switch (data.type) {
 			case 'stats':
-				renderStats(data.stats);
+				renderStats(data.team);
+				renderTeamName(data.name);  // Render the updated team name
+				renderCountryStats(data.country);  // Render the country stats
 				break;
 		}
 	};
 
 	ws.onclose = () => {
-		console.log("Attempting to reconnect...");
-		webSocket = connect();
+		console.log("Connection lost, attempting to reconnect...");
+		setTimeout(() => {
+			webSocket = connect();
+		}, 3000);  // Reconnect after a delay
 	}
 
 	return ws;
 }
 
-
+// Handle LEGO block click
 document.getElementById('lego-block').addEventListener('click', async () => {
 	if (!username) {
 		console.error('No username found in cookie');
 		return;
 	}
+	// Send click event via WebSocket
 	webSocket.send(JSON.stringify({ type: 'click', username }));
-	clickSound.play();
+	clickSound.play();  // Play click sound
 });
 
 // Load the click sound
 const clickSound = new Audio('/click.wav');
 
-function renderStats(stats) {
+// Render team stats and update the stats list
+function renderStats(teamStats) {
 	const statsList = document.getElementById('stats-list');
-	statsList.innerHTML = ''; // Clear the existing stats
+	statsList.innerHTML = '';  // Clear the existing stats
 
-	stats.forEach((stat) => {
+	teamStats.forEach((stat) => {
 		let listItem = document.querySelector(`li[data-username="${stat.username}"]`);
 
 		if (!listItem) {
@@ -83,9 +89,28 @@ function renderStats(stats) {
 
 		// Highlight the user's entry if the username matches
 		if (stat.username === username) {
-			listItem.classList.add('highlight'); // Add highlight class to user
+			listItem.classList.add('highlight');  // Add highlight class to user
 		} else {
 			listItem.classList.remove('highlight');
 		}
+	});
+}
+
+// Render team name
+function renderTeamName(teamName) {
+	const teamNameElement = document.getElementById('team-name');
+	teamNameElement.textContent = teamName;  // Update the team name with the new value
+}
+
+// Render stats by country
+function renderCountryStats(countryStats) {
+	const countryStatsList = document.getElementById('country-stats-list');
+	countryStatsList.innerHTML = '';  // Clear the existing country stats
+
+	// Display stats by country
+	countryStats.forEach((countryStat) => {
+		const listItem = document.createElement('li');
+		listItem.textContent = `${countryStat.country}: ${countryStat.clicks} clicks`;
+		countryStatsList.appendChild(listItem);
 	});
 }

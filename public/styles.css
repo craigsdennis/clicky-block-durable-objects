@@ -1,33 +1,90 @@
+/* General body styling */
 body {
     font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    margin: 0;
-    background-color: #f4f4f4;
 }
 
+/* Container for the whole team page */
 .team-container {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    max-width: 900px; /* Max width of the main container */
+    width: 100%;
     text-align: center;
 }
 
+/* Team title */
+h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+/* Styling for the block image */
 .block-container img {
-    width: 200px;
-    cursor: pointer;
+    max-width: 150px;
+    height: auto;
+    display: block;
+    margin: 0 auto 20px auto; /* Center the block and add margin below */
 }
 
-#stats-container {
-    margin-top: 20px;
+/* Flexbox container for side-by-side stats */
+.stats-flex-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px; /* Space between team and country stats */
+    align-items: flex-start;
+    width: 100%;
+    max-width: 900px; /* Ensure the flex container takes up the full width */
+    margin: 0 auto;
 }
 
+/* Ensure both sections have equal width */
+.stats-section, .country-stats-section {
+    flex: 1 1 0;
+    min-width: 45%; /* Ensure sections don't shrink below this size */
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box; /* Ensure padding and border are included in the width */
+}
+
+/* Stats section title */
+h2 {
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+/* List styling for stats */
 ul {
-    list-style: none;
+    list-style-type: none;
     padding: 0;
 }
 
-/* General highlight for user and team */
+/* List items for user stats */
+ul li {
+    padding: 5px 0;
+    font-size: 16px;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Highlighted user/team styling */
 .highlight {
     background-color: lightgreen;
     font-weight: bold;
+}
+
+/* Ensure a clean layout for mobile */
+@media (max-width: 600px) {
+    .stats-flex-container {
+        flex-direction: column;
+        gap: 10px;
+    }
 }

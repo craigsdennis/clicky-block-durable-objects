@@ -39,11 +39,11 @@ export class Game extends DurableObject {
 		ctx.storage.setAlarm(Date.now() + ALARM_TIME);
 	}
 
-	async addPlayerToAvailableTeam(username: string, country: string | unknown): Promise<string> {
+	async addPlayerToAvailableTeam(username: string, country: string | unknown) {
 		// Find team that isn't full
 		let teamId: string | undefined = undefined;
 		while (teamId === undefined) {
-			const cursor = this.sql.exec(`SELECT * FROM teams WHERE full = 0`);
+			const cursor = this.sql.exec(`SELECT * FROM teams WHERE full = 0 LIMIT 1;`);
 			const first = [...cursor][0];
 			if (first !== undefined) {
 				if (first.id && typeof first.id === 'string') {
@@ -61,14 +61,18 @@ export class Game extends DurableObject {
 		}
 		// Add player
 		const teamStub = await this.getTeamStub(teamId);
-		await teamStub.addPlayer(username, country);
+		// Username's are unique
+		const safeUsername = await teamStub.getSafeUsername(username);
+		await teamStub.addPlayer(safeUsername, country);
+		const name = this.sql.exec(`SELECT name FROM teams where id=?`, teamId).raw().next().value[0];
+		await teamStub.setName(name);
 		// Get count, if full, mark as full
 		const playerCount = await teamStub.getPlayerCount();
 		if (playerCount >= this.MAX_PLAYERS) {
 			this.sql.exec(`UPDATE teams SET full=1 WHERE id=?`, teamId);
 		}
 		// Return the team id
-		return teamId;
+		return {safeUsername, teamId};
 	}
 
 	async getTeamStub(teamId: string): Promise<DurableObjectStub<Team>> {
@@ -90,7 +94,7 @@ export class Game extends DurableObject {
 			const info = await teamStub.getPlayerInfo();
 			// Run AI to generate name
 			const results = await this.env.AI.run(
-				'@cf/meta/llama-3-8b-instruct',
+				'@cf/meta/llama-3.1-8b-instruct',
 				{
 					messages: [
 						{
@@ -121,6 +125,7 @@ export class Game extends DurableObject {
 			console.log('Updating team name:', teamName);
 			// Update team name
 			this.sql.exec(`UPDATE teams SET name=? WHERE id=?`, teamName, row.id);
+			await teamStub.setName(teamName);
 		}
 	}
 
@@ -171,7 +176,7 @@ export class Team extends DurableObject {
 		this.sql = ctx.storage.sql;
 		this.sql.exec(`
 			CREATE TABLE IF NOT EXISTS players(
-				username TEXT NOT NULL,
+				username TEXT NOT NULL UNIQUE,
 				country TEXT NOT NULL,
 			    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 			);`);
@@ -183,22 +188,37 @@ export class Team extends DurableObject {
 		this.storage.setAlarm(Date.now() + ALARM_TIME);
 	}
 
+	async setName(name: string) {
+		await this.storage.put("name", name);
+	}
+
+	async getName() {
+		return this.storage.get("name");
+	}
+
+	async getSafeUsername(username: string): Promise<string> {
+		const cursor = this.sql.exec(`SELECT count(*) FROM players WHERE username=?`, username);
+		if (cursor.raw().next().value[0] === 0) {
+			return username;
+		}
+		const fixCursor = this.sql.exec(`SELECT count(*) FROM players WHERE username LIKE ?`, `${username} (%`);
+		const fixNameCount = fixCursor.raw().next().value[0];
+		const fixes = ["the second", "the third", "the fourth", "the fifth"];
+		return `${username} (${fixes[fixNameCount]})`;
+	}
+
 	async addPlayer(username: string, country: string | unknown): Promise<boolean> {
 		this.sql.exec(`INSERT INTO players (username, country) VALUES (?, ?);`, username, country);
-		return true;
+		return true
 	}
 
 	async getPlayerCount(): Promise<number> {
 		const cursor = this.sql.exec(`SELECT count(*) as playerCount FROM players;`);
-		const first = [...cursor][0];
-		if (typeof first.playerCount !== 'number') {
-			return 0;
-		}
-		return first.playerCount;
+		return cursor.raw().next().value[0];
 	}
 
 	async clickBlock(username: string): Promise<boolean> {
-		this.sql.exec(`INSERT INTO clicks (username) VALUES (?);`, username);
+		const cursor = this.sql.exec(`INSERT INTO clicks (username) VALUES (?);`, username);
 		return true;
 	}
 
@@ -234,6 +254,24 @@ export class Team extends DurableObject {
 		return stats;
 	}
 
+	async getCountryStats() {
+		const cursor = this.sql.exec(`SELECT * FROM players ORDER BY country`);
+		const stats: {[key: string]: number} = {};
+		for (const row of cursor) {
+			const country: string = row.country as string;
+			stats[country] = stats[country] || 0;
+			stats[country] += this.sql.exec(`SELECT count(*) FROM clicks WHERE username=?`, row.username).raw().next().value[0];
+		}
+		const statsArray = Object.keys(stats).map(country => ({
+			country,
+			clicks: stats[country],
+		  }));
+
+		  // Step 2: Sort the array in descending order of clicks
+		  const sortedArray = statsArray.sort((a, b) => b.clicks - a.clicks);
+		return sortedArray;
+	}
+
 	async fetch() {
 		const pair = new WebSocketPair();
 		const [client, server] = Object.values(pair);
@@ -254,9 +292,16 @@ export class Team extends DurableObject {
 				break;
 		}
 		// Always broadcast stats
-		const stats = await this.getStats();
+		const teamStats = await this.getStats();
+		const countryStats = await this.getCountryStats();
+		const name = await this.getName();
 		this.ctx.getWebSockets().forEach((server) => {
-			server.send(JSON.stringify({ type: 'stats', stats }));
+			server.send(JSON.stringify({
+				type: 'stats',
+				name,
+				team: teamStats,
+				country: countryStats
+			}));
 		});
 	}
 
@@ -284,9 +329,9 @@ app.post(
 		const id: DurableObjectId = c.env.GAME.idFromName(CURRENT_GAME);
 		const gameStub = c.env.GAME.get(id);
 		// Add the player
-		const teamId = await gameStub.addPlayerToAvailableTeam(username, country);
+		const {safeUsername, teamId} = await gameStub.addPlayerToAvailableTeam(username, country);
 		// Set a cookie
-		setCookie(c, 'username', username);
+		setCookie(c, 'username', safeUsername);
 		setCookie(c, 'teamId', teamId);
 		// Redirect to the team page using pathy
 		const playUrl = `/play/${CURRENT_GAME}/${teamId}`;
