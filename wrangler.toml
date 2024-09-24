@@ -65,6 +65,15 @@ name = "TEAM"
 class_name = "Team"
 
 
+[[durable_objects.bindings]]
+name = "AGGREGATOR"
+class_name = "Aggregator"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["Aggregator"]
+
+
 # Bind a Hyperdrive configuration. Use to accelerate access to your existing databases from Cloudflare Workers.
 # Docs: https://developers.cloudflare.com/workers/wrangler/configuration/#hyperdrive
 # [[hyperdrive]]

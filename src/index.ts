@@ -72,7 +72,7 @@ export class Game extends DurableObject {
 			this.sql.exec(`UPDATE teams SET full=1 WHERE id=?`, teamId);
 		}
 		// Return the team id
-		return {safeUsername, teamId};
+		return { safeUsername, teamId };
 	}
 
 	async getTeamStub(teamId: string): Promise<DurableObjectStub<Team>> {
@@ -140,7 +140,7 @@ export class Game extends DurableObject {
 				return true;
 			}
 		});
-		return await Promise.allSettled(promises);
+		return Promise.allSettled(promises);
 	}
 
 	async leaderboard() {
@@ -154,14 +154,6 @@ export class Game extends DurableObject {
 			});
 		}
 		return leaderboard;
-	}
-
-	async alarm() {
-		console.log('Game Alarm triggered');
-		await this.renameFullTeams();
-		await this.gatherAggregateClicks();
-		// Reset the alarm
-		this.storage.setAlarm(Date.now() + ALARM_TIME);
 	}
 }
 
@@ -189,11 +181,11 @@ export class Team extends DurableObject {
 	}
 
 	async setName(name: string) {
-		await this.storage.put("name", name);
+		await this.storage.put('name', name);
 	}
 
 	async getName() {
-		return this.storage.get("name");
+		return this.storage.get('name');
 	}
 
 	async getSafeUsername(username: string): Promise<string> {
@@ -203,13 +195,13 @@ export class Team extends DurableObject {
 		}
 		const fixCursor = this.sql.exec(`SELECT count(*) FROM players WHERE username LIKE ?`, `${username} (%`);
 		const fixNameCount = fixCursor.raw().next().value[0];
-		const fixes = ["the second", "the third", "the fourth", "the fifth"];
+		const fixes = ['the second', 'the third', 'the fourth', 'the fifth'];
 		return `${username} (${fixes[fixNameCount]})`;
 	}
 
 	async addPlayer(username: string, country: string | unknown): Promise<boolean> {
 		this.sql.exec(`INSERT INTO players (username, country) VALUES (?, ?);`, username, country);
-		return true
+		return true;
 	}
 
 	async getPlayerCount(): Promise<number> {
@@ -256,19 +248,19 @@ export class Team extends DurableObject {
 
 	async getCountryStats() {
 		const cursor = this.sql.exec(`SELECT * FROM players ORDER BY country`);
-		const stats: {[key: string]: number} = {};
+		const stats: { [key: string]: number } = {};
 		for (const row of cursor) {
 			const country: string = row.country as string;
 			stats[country] = stats[country] || 0;
 			stats[country] += this.sql.exec(`SELECT count(*) FROM clicks WHERE username=?`, row.username).raw().next().value[0];
 		}
-		const statsArray = Object.keys(stats).map(country => ({
+		const statsArray = Object.keys(stats).map((country) => ({
 			country,
 			clicks: stats[country],
-		  }));
+		}));
 
-		  // Step 2: Sort the array in descending order of clicks
-		  const sortedArray = statsArray.sort((a, b) => b.clicks - a.clicks);
+		// Step 2: Sort the array in descending order of clicks
+		const sortedArray = statsArray.sort((a, b) => b.clicks - a.clicks);
 		return sortedArray;
 	}
 
@@ -296,12 +288,14 @@ export class Team extends DurableObject {
 		const countryStats = await this.getCountryStats();
 		const name = await this.getName();
 		this.ctx.getWebSockets().forEach((server) => {
-			server.send(JSON.stringify({
-				type: 'stats',
-				name,
-				team: teamStats,
-				country: countryStats
-			}));
+			server.send(
+				JSON.stringify({
+					type: 'stats',
+					name,
+					team: teamStats,
+					country: countryStats,
+				})
+			);
 		});
 	}
 
@@ -309,6 +303,34 @@ export class Team extends DurableObject {
 		console.log(`Client WebSocket Closed - ${code}: ${reason} ${wasClean}`);
 		console.log('Closing server');
 		ws.close();
+	}
+}
+
+export class Aggregator extends DurableObject {
+	env: Env;
+	constructor(ctx: DurableObjectState, env: Env) {
+		super(ctx, env);
+		this.env = env;
+		this.ctx.storage.setAlarm(Date.now() + ALARM_TIME);
+	}
+
+	async setName(name: string) {
+		await this.ctx.storage.put('name', name);
+	}
+
+	async getName() {
+		return this.ctx.storage.get('name');
+	}
+
+	async alarm(): Promise<void> {
+		console.log('Aggregator Alarm triggered');
+		const gameName: string = (await this.getName()) as string;
+		const id = this.env.GAME.idFromName(gameName);
+		const gameStub = this.env.GAME.get(id);
+		await gameStub.renameFullTeams();
+		await gameStub.gatherAggregateClicks();
+		// Reset the alarm
+		this.ctx.storage.setAlarm(Date.now() + ALARM_TIME);
 	}
 }
 
@@ -325,12 +347,14 @@ app.post(
 		// Use a form
 		const { username } = c.req.valid('form');
 		const country = c.req.raw.cf?.country;
-		console.log("cf", c.req.raw.cf);
 		// Get the game
 		const id: DurableObjectId = c.env.GAME.idFromName(CURRENT_GAME);
 		const gameStub = c.env.GAME.get(id);
+		const aggregatorId = c.env.AGGREGATOR.idFromName(CURRENT_GAME);
+		const aggregatorStub = c.env.AGGREGATOR.get(aggregatorId);
+		await aggregatorStub.setName(CURRENT_GAME);
 		// Add the player
-		const {safeUsername, teamId} = await gameStub.addPlayerToAvailableTeam(username, country);
+		const { safeUsername, teamId } = await gameStub.addPlayerToAvailableTeam(username, country);
 		// Set a cookie
 		setCookie(c, 'username', safeUsername);
 		setCookie(c, 'teamId', teamId);
@@ -361,7 +385,6 @@ app.get('/api/connect/:game/:teamId/ws', async (c) => {
 	const teamStub = c.env.TEAM.get(id);
 	return teamStub.fetch(c.req.raw);
 });
-
 
 app.get('/api/leaderboard/:game', async (c) => {
 	const { game } = c.req.param();

@@ -3,5 +3,6 @@
 interface Env {
 	GAME: DurableObjectNamespace<import("./src/index").Game>;
 	TEAM: DurableObjectNamespace<import("./src/index").Team>;
+	AGGREGATOR: DurableObjectNamespace<import("./src/index").Aggregator>;
 	AI: Ai;
 }
