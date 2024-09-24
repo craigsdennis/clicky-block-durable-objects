@@ -2,18 +2,36 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <!-- Meta Description and Open Graph Tags -->
+    <meta name="description" content="Join Clicky Block and compete with players around the world!">
+    <meta property="og:title" content="Join Clicky Block">
+    <meta property="og:description" content="Enter your username and join a team to start playing Clicky Block.">
+    <meta property="og:image" content="/images/join-page-thumbnail.png">
+    <meta property="og:url" content="https://yourwebsite.com/join">
+    <meta property="og:type" content="website">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Join Clicky Block</title>
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-    <div class="join-container">
-        <h1>Join Clicky Block</h1>
-        <form action="/join" method="POST">
-            <label for="username">Enter your username:</label>
-            <input type="text" id="username" name="username" required>
-            <button type="submit">Join Team</button>
-        </form>
-    </div>
+    <main>
+        <div class="join-container">
+            <h1>Join Clicky Block</h1>
+            <form action="/join" method="POST">
+                <label for="username">Enter your username:</label>
+                <input type="text" id="username" name="username" required aria-label="Enter your username" placeholder="Your username">
+                <button type="submit">Join Team</button>
+            </form>
+        </div>
+    </main>
+
+    <footer>
+        <p>Built with 🧡 using Cloudflare Workers and Durable Objects</p>
+    </footer>
+
+    <!-- Include utils.js -->
+    <script src="/utils.js"></script>
+    <!-- Include index.js if you have additional scripts for this page -->
+    <!-- <script src="/index.js"></script> -->
 </body>
 </html>

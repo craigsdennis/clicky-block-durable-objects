@@ -1,11 +1,4 @@
-// utils.js (Assuming this is included before script.js)
-// Helper function to get the value of a cookie and decode it
-function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return decodeURIComponent(parts.pop().split(';').shift());
-    return null;
-}
+// Assuming utils.js is included before script.js
 
 // Extract GAME and TEAM from the URL
 const urlParts = window.location.pathname.split('/');
@@ -34,6 +27,12 @@ function connect() {
 
     ws.onopen = () => {
         console.log('Connected to WebSocket!');
+        // Send a "hello" message when the WebSocket is ready
+        if (username) {
+            ws.send(JSON.stringify({ type: 'hello', username }));
+        } else {
+            console.warn('Username is not set. Hello message not sent.');
+        }
     };
 
     ws.onmessage = (message) => {
@@ -41,10 +40,12 @@ function connect() {
             const data = JSON.parse(message.data);
             switch (data.type) {
                 case 'stats':
+                    // Only re-render if necessary
                     renderStats(data.team);
                     renderTeamName(data.name);
                     renderCountryStats(data.country);
                     break;
+                // Handle other message types if necessary
                 default:
                     console.warn(`Unhandled message type: ${data.type}`);
             }
@@ -86,7 +87,7 @@ if (legoBlock) {
 
     // Click event
     let canClick = true;
-    const clickCooldown = 200; // milliseconds
+    const clickCooldown = 50; // milliseconds
 
     legoBlock.addEventListener('click', () => {
         if (!canClick) return;
@@ -124,6 +125,11 @@ const clickSound = new Audio('/click.wav');
 function renderStats(teamStats) {
     const statsList = document.getElementById('stats-list');
     if (!statsList) return;
+
+    // Only re-render if there are changes
+    // Implement logic to check if the new stats are different from the current ones
+    // For simplicity, we will assume that we always re-render upon receiving new stats
+
     statsList.innerHTML = ''; // Clear the existing stats
 
     // Sort teamStats by clicks in descending order
@@ -155,6 +161,7 @@ function renderTeamName(teamName) {
 function renderCountryStats(countryStats) {
     const countryStatsList = document.getElementById('country-stats-list');
     if (!countryStatsList) return;
+
     countryStatsList.innerHTML = ''; // Clear the existing country stats
 
     // Sort countryStats by clicks in descending order
@@ -162,7 +169,8 @@ function renderCountryStats(countryStats) {
 
     countryStats.forEach((countryStat) => {
         const listItem = document.createElement('li');
-        listItem.textContent = `${countryStat.country}: ${countryStat.clicks} clicks`;
+        const flagEmoji = countryCodeToFlagEmoji(countryStat.country);
+        listItem.textContent = `${flagEmoji} ${countryStat.country}: ${countryStat.clicks} clicks`;
         countryStatsList.appendChild(listItem);
     });
 }

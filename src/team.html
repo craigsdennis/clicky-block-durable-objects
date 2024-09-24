@@ -14,15 +14,6 @@
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <nav>
-        <ul class="nav-links">
-            <li><a href="/">Home</a></li>
-            <li><a href="/play">Play</a></li>
-            <li><a href="/leaderboard">Leaderboard</a></li>
-        </ul>
-    </nav>
-
     <main>
         <div class="team-container">
             <h1>Welcome to Team <span id="team-name"></span>!</h1>
@@ -32,18 +23,27 @@
                 <img id="lego-block" src="/block.png" alt="LEGO Block" role="button" aria-label="Click the block to earn points">
             </div>
 
-            <!-- Stats sections -->
-            <div class="stats-section">
-                <h2>Team Stats</h2>
-                <ul id="stats-list"></ul>
-            </div>
+            <!-- Stats sections with common header -->
+            <div class="stats-container">
+                <h2>Stats</h2>
+                <div class="stats-flex">
+                    <div class="stats-section">
+                        <h3>Team</h3>
+                        <ul id="stats-list"></ul>
+                    </div>
 
-            <div class="country-stats-section">
-                <h2>Stats by Country</h2>
-                <ul id="country-stats-list"></ul>
+                    <div class="country-stats-section">
+                        <h3>By Country</h3>
+                        <ul id="country-stats-list"></ul>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
+
+    <footer>
+        <p>Built with 🧡 using Cloudflare Workers and Durable Objects</p>
+    </footer>
 
     <!-- Include necessary scripts -->
     <script src="/utils.js"></script>
