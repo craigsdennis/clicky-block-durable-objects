@@ -59,6 +59,8 @@ class_name = "Game"
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["Game", "Team"]
+new_classes = ["Aggregator"]
+
 
 [[durable_objects.bindings]]
 name = "TEAM"
@@ -68,10 +70,6 @@ class_name = "Team"
 [[durable_objects.bindings]]
 name = "AGGREGATOR"
 class_name = "Aggregator"
-
-[[migrations]]
-tag = "v1"
-new_classes = ["Aggregator"]
 
 
 # Bind a Hyperdrive configuration. Use to accelerate access to your existing databases from Cloudflare Workers.

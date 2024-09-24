@@ -79,7 +79,7 @@ function getCookie(name) {
 }
 
   // Set up polling with increased interval and clear on unload
-  const intervalId = setInterval(fetchLeaderboard, 30000); // Poll every 30 seconds
+  const intervalId = setInterval(fetchLeaderboard, 3000); // Poll every 3 seconds
 
   window.addEventListener('beforeunload', () => {
 	clearInterval(intervalId);
