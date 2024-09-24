@@ -5,4 +5,5 @@ interface Env {
 	TEAM: DurableObjectNamespace<import("./src/index").Team>;
 	AGGREGATOR: DurableObjectNamespace<import("./src/index").Aggregator>;
 	AI: Ai;
+	ASSETS: Fetcher;
 }
