@@ -325,6 +325,7 @@ app.post(
 		// Use a form
 		const { username } = c.req.valid('form');
 		const country = c.req.raw.cf?.country;
+		console.log("cf", c.req.raw.cf);
 		// Get the game
 		const id: DurableObjectId = c.env.GAME.idFromName(CURRENT_GAME);
 		const gameStub = c.env.GAME.get(id);

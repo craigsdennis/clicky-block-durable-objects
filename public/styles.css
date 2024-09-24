@@ -4,26 +4,43 @@ body {
     background-color: #f4f4f4;
     margin: 0;
     padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
 }
 
-/* Container for the whole team page */
+/* Footer styling */
+footer {
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    padding: 15px 0;
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+}
+
+footer p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* Adjust main content to not overlap with fixed footer */
+main {
+    padding-bottom: 60px; /* Adjust according to footer height */
+}
+
+/* Team Container Styling */
 .team-container {
     background-color: white;
     border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     padding: 20px;
-    max-width: 900px; /* Max width of the main container */
-    width: 100%;
+    max-width: 900px;
+    width: 90%;
+    margin: 80px auto;
     text-align: center;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
 }
 
-/* Team title */
-h1 {
-    font-size: 24px;
+.team-container h1 {
+    font-size: 32px;
     margin-bottom: 20px;
 }
 
@@ -33,58 +50,149 @@ h1 {
     height: auto;
     display: block;
     margin: 0 auto 20px auto; /* Center the block and add margin below */
+    cursor: pointer;
+    transition: transform 0.1s;
 }
 
-/* Flexbox container for side-by-side stats */
-.stats-flex-container {
+.block-container img.clicked {
+    transform: scale(0.95);
+}
+
+/* Stats Container */
+.stats-container {
+    margin-top: 20px;
+}
+
+.stats-container h2 {
+    font-size: 28px;
+    margin-bottom: 20px;
+}
+
+/* Flex container for stats sections */
+.stats-flex {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
-    gap: 20px; /* Space between team and country stats */
-    align-items: flex-start;
-    width: 100%;
-    max-width: 900px; /* Ensure the flex container takes up the full width */
-    margin: 0 auto;
+    gap: 20px;
 }
 
-/* Ensure both sections have equal width */
-.stats-section, .country-stats-section {
-    flex: 1 1 0;
-    min-width: 45%; /* Ensure sections don't shrink below this size */
-    padding: 10px;
-    border: 1px solid #ddd;
+/* Stats Sections */
+.stats-section,
+.country-stats-section {
+    background-color: #fafafa;
+    padding: 15px;
     border-radius: 5px;
-    box-sizing: border-box; /* Ensure padding and border are included in the width */
+    box-sizing: border-box;
+    flex: 1 1 45%; /* Adjusts width and allows wrapping on smaller screens */
+    min-width: 300px; /* Minimum width before wrapping */
+    text-align: left;
 }
 
-/* Stats section title */
-h2 {
-    font-size: 20px;
+.stats-section h3,
+.country-stats-section h3 {
+    font-size: 24px;
     margin-bottom: 10px;
 }
 
 /* List styling for stats */
-ul {
+.stats-section ul,
+.country-stats-section ul {
     list-style-type: none;
     padding: 0;
+    margin: 0;
 }
 
-/* List items for user stats */
-ul li {
-    padding: 5px 0;
-    font-size: 16px;
+/* List items for stats */
+.stats-section ul li,
+.country-stats-section ul li {
+    padding: 10px 0;
+    font-size: 18px;
     border-bottom: 1px solid #ddd;
+    position: relative;
 }
 
 /* Highlighted user/team styling */
 .highlight {
-    background-color: lightgreen;
+    background-color: #fffbcc;
     font-weight: bold;
 }
 
-/* Ensure a clean layout for mobile */
-@media (max-width: 600px) {
-    .stats-flex-container {
+.highlight::before {
+    content: '⭐';
+    position: absolute;
+    left: -25px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 800px) {
+    .stats-flex {
         flex-direction: column;
-        gap: 10px;
     }
+
+    .stats-section,
+    .country-stats-section {
+        flex: 1 1 100%;
+        min-width: unset;
+    }
+}
+
+@media (max-width: 600px) {
+    /* Adjust main containers */
+    .team-container {
+        width: 95%;
+        margin: 60px auto;
+        padding: 20px;
+    }
+
+    /* Adjust headings */
+    .team-container h1,
+    .stats-container h2 {
+        font-size: 28px;
+    }
+
+    .stats-section h3,
+    .country-stats-section h3 {
+        font-size: 22px;
+    }
+
+    /* Adjust font sizes */
+    .stats-section ul li,
+    .country-stats-section ul li {
+        font-size: 16px;
+    }
+
+    /* Adjust block image */
+    .block-container img {
+        max-width: 120px;
+    }
+}
+
+/* Additional Styles */
+
+/* Input field focus state */
+input[type="text"]:focus {
+    border-color: #80bdff;
+    outline: none;
+}
+
+/* Button hover and focus states */
+button:hover,
+button:focus {
+    background-color: #218838;
+    outline: none;
+}
+
+/* Scrollbar styling (optional) */
+body::-webkit-scrollbar {
+    width: 10px;
+}
+
+body::-webkit-scrollbar-track {
+    background: #f4f4f4;
+}
+
+body::-webkit-scrollbar-thumb {
+    background-color: #888;
+    border-radius: 5px;
+    border: 2px solid #f4f4f4;
 }
