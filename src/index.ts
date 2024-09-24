@@ -1,12 +1,12 @@
-import { Hono } from 'hono';
+import { Context, Hono } from 'hono';
 import { DurableObject } from 'cloudflare:workers';
 import { validator } from 'hono/validator';
 import { getCookie, setCookie } from 'hono/cookie';
 
 // @ts-ignore
-import teamHtml from './team.html';
+// import teamHtml from './team.html';
 // @ts-ignore
-import leaderboardHtml from './leaderboard.html';
+// import leaderboardHtml from './leaderboard.html';
 
 const app = new Hono<{ Bindings: Env }>();
 const CURRENT_GAME = 'builderday';
@@ -156,14 +156,17 @@ export class Game extends DurableObject {
 	}
 
 	async teamPlacement(teamId: string): Promise<Array<number>> {
-		const rowCursor = this.sql.exec(`SELECT place FROM (
+		const rowCursor = this.sql.exec(
+			`SELECT place FROM (
 			SELECT
 				id,
 				ROW_NUMBER() OVER (ORDER BY total_clicks DESC) as place
 			FROM
 				teams
 			) as ranked
-			 WHERE id=?`, teamId);
+			 WHERE id=?`,
+			teamId
+		);
 		const rowNumber = rowCursor.raw().next().value[0];
 		const totalCount = this.sql.exec(`SELECT count(*) FROM teams;`).raw().next().value[0];
 		// Place of Total
@@ -383,10 +386,19 @@ app.get('/play', async (c) => {
 	const username = getCookie(c, 'username');
 	const teamId = getCookie(c, 'teamId');
 	if (username && teamId) {
-		return c.redirect(`/play/${CURRENT_GAME}/${teamId}`)
+		return c.redirect(`/play/${CURRENT_GAME}/${teamId}`);
 	}
-	return c.redirect("/");
-})
+	return c.redirect('/');
+});
+
+async function getHtmlTemplate(c: Context, name: string) {
+	const asset = await c.env.ASSETS.unstable_getByPathname(name);
+	if (!asset) {
+		throw new Error('missing asset!');
+	}
+
+	return new Response(asset.readableStream, { headers: { 'Content-Type': asset.contentType } });
+}
 
 app.get('/play/:game/:teamId', async (c) => {
 	const username = getCookie(c, 'username');
@@ -396,11 +408,11 @@ app.get('/play/:game/:teamId', async (c) => {
 		return c.redirect('/');
 	}
 	// TODO: Validate the GAME and TEAM?
-	return c.html(teamHtml);
+	return getHtmlTemplate(c, '/team.html');
 });
 
 app.get('/leaderboard/:game', async (c) => {
-	return c.html(leaderboardHtml);
+	return getHtmlTemplate(c, '/leaderboard.html');
 });
 
 app.get('/api/connect/:game/:teamId/ws', async (c) => {
@@ -425,6 +437,5 @@ app.get('/api/leaderboard/placement/:game/:teamId', async (c) => {
 	const [placement, totalCount] = await gameStub.teamPlacement(teamId);
 	return c.json({ placement, totalCount });
 });
-
 
 export default app;
