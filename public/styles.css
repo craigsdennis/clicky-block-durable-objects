@@ -4,10 +4,34 @@ body {
     background-color: #f4f4f4;
     margin: 0;
     padding: 0;
+}
+
+/* Navigation Bar */
+nav {
+    background-color: #333;
+    padding: 10px;
+}
+
+.nav-links {
+    list-style: none;
     display: flex;
     justify-content: center;
-    align-items: center;
-    height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-links li {
+    margin: 0 15px;
+}
+
+.nav-links a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 18px;
+}
+
+.nav-links a:hover {
+    text-decoration: underline;
 }
 
 /* Container for the whole team page */
@@ -16,14 +40,15 @@ body {
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     padding: 20px;
-    max-width: 900px; /* Max width of the main container */
+    max-width: 900px;
     width: 100%;
+    margin: 40px auto; /* Center the container with margin */
     text-align: center;
 }
 
 /* Team title */
-h1 {
-    font-size: 24px;
+.team-container h1 {
+    font-size: 32px;
     margin-bottom: 20px;
 }
 
@@ -35,56 +60,139 @@ h1 {
     margin: 0 auto 20px auto; /* Center the block and add margin below */
 }
 
-/* Flexbox container for side-by-side stats */
-.stats-flex-container {
-    display: flex;
-    justify-content: space-between;
-    gap: 20px; /* Space between team and country stats */
-    align-items: flex-start;
-    width: 100%;
-    max-width: 900px; /* Ensure the flex container takes up the full width */
-    margin: 0 auto;
-}
-
-/* Ensure both sections have equal width */
+/* Stats sections */
 .stats-section, .country-stats-section {
-    flex: 1 1 0;
-    min-width: 45%; /* Ensure sections don't shrink below this size */
-    padding: 10px;
-    border: 1px solid #ddd;
+    background-color: #fafafa;
+    padding: 15px;
     border-radius: 5px;
-    box-sizing: border-box; /* Ensure padding and border are included in the width */
+    margin-bottom: 20px;
+    box-sizing: border-box;
 }
 
 /* Stats section title */
-h2 {
-    font-size: 20px;
+.stats-section h2, .country-stats-section h2 {
+    font-size: 24px;
     margin-bottom: 10px;
 }
 
 /* List styling for stats */
-ul {
+.stats-section ul, .country-stats-section ul {
     list-style-type: none;
     padding: 0;
+    margin: 0;
 }
 
 /* List items for user stats */
-ul li {
-    padding: 5px 0;
-    font-size: 16px;
+.stats-section ul li, .country-stats-section ul li {
+    padding: 10px 0;
+    font-size: 18px;
     border-bottom: 1px solid #ddd;
 }
 
 /* Highlighted user/team styling */
 .highlight {
-    background-color: lightgreen;
+    background-color: #fffbcc;
+    font-weight: bold;
+    position: relative;
+}
+
+/* Star icon for highlighted user/team */
+.highlight::before {
+    content: '⭐';
+    position: absolute;
+    left: -25px;
+}
+
+/* Visual feedback for LEGO block click */
+.clicked {
+    transform: scale(0.95);
+    transition: transform 0.1s;
+}
+
+/* Leaderboard container styling */
+.leaderboard-container {
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    max-width: 800px;
+    margin: 40px auto;
+    text-align: center;
+}
+
+.leaderboard-container h1 {
+    font-size: 32px;
+    margin-bottom: 20px;
+}
+
+/* Search input styling */
+#search-input {
+    width: 80%;
+    padding: 10px;
+    margin-bottom: 20px;
+    font-size: 16px;
+}
+
+/* Leaderboard list styling */
+#leaderboard-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#leaderboard-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 18px;
+    position: relative;
+}
+
+#leaderboard-list li.highlight {
+    background-color: #fffbcc;
     font-weight: bold;
 }
 
-/* Ensure a clean layout for mobile */
+#leaderboard-list li.highlight::before {
+    content: '⭐';
+    position: absolute;
+    left: -25px;
+}
+
+/* Responsive adjustments */
 @media (max-width: 600px) {
-    .stats-flex-container {
+    /* Adjust leaderboard list items */
+    #leaderboard-list li {
         flex-direction: column;
-        gap: 10px;
+        align-items: flex-start;
+    }
+
+    #leaderboard-list li span {
+        margin-bottom: 5px;
+    }
+
+    /* Adjust team container */
+    .team-container {
+        padding: 15px;
+    }
+
+    /* Adjust stats sections */
+    .stats-section, .country-stats-section {
+        padding: 10px;
+    }
+
+    /* Adjust headings */
+    .team-container h1, .leaderboard-container h1 {
+        font-size: 28px;
+    }
+
+    .stats-section h2, .country-stats-section h2 {
+        font-size: 22px;
+    }
+
+    /* Adjust font sizes */
+    .stats-section ul li, .country-stats-section ul li {
+        font-size: 16px;
     }
 }

@@ -1,116 +1,168 @@
+// utils.js (Assuming this is included before script.js)
 // Helper function to get the value of a cookie and decode it
 function getCookie(name) {
-	const value = `; ${document.cookie}`;
-	const parts = value.split(`; ${name}=`);
-	if (parts.length === 2) return decodeURIComponent(parts.pop().split(';').shift());
-	return null;
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return decodeURIComponent(parts.pop().split(';').shift());
+    return null;
 }
 
 // Extract GAME and TEAM from the URL
 const urlParts = window.location.pathname.split('/');
-const game = urlParts[2];  // Assuming URL structure is /play/<GAME>/<TEAM>
-const teamId = urlParts[3];  // For team pages only
+// Assuming URL structure is /play/<GAME>/<TEAM>
+const game = urlParts[2];
+const teamId = urlParts[3];
 
 // Get the username from the cookie
 const username = getCookie('username');
 
 // Set the team name for team pages
-if (document.getElementById('team-name')) {
-	document.getElementById('team-name').textContent = teamId;
+const teamNameElement = document.getElementById('team-name');
+if (teamNameElement) {
+    teamNameElement.textContent = teamId;
 }
 
-const wss = document.location.protocol === 'http:' ? 'ws://' : 'wss://';
-let hostname = window.location.hostname;
-if (hostname === '' || hostname === 'localhost') {
-	hostname = hostname + ':' + document.location.port;
-}
+// Determine WebSocket protocol
+const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+const wsHost = window.location.host;
 
 let webSocket = connect();
 
 function connect() {
-	const websocketServerUrl = `${wss}${hostname}/api/connect/${game}/${teamId}/ws`;
-	const ws = new WebSocket(websocketServerUrl);
+    const websocketServerUrl = `${wsProtocol}//${wsHost}/api/connect/${game}/${teamId}/ws`;
+    const ws = new WebSocket(websocketServerUrl);
 
-	ws.onopen = () => {
-		console.log('Connected to WebSocket!');
-	};
+    ws.onopen = () => {
+        console.log('Connected to WebSocket!');
+    };
 
-	ws.onmessage = (message) => {
-		const data = JSON.parse(message.data);
-		switch (data.type) {
-			case 'stats':
-				renderStats(data.team);
-				renderTeamName(data.name);  // Render the updated team name
-				renderCountryStats(data.country);  // Render the country stats
-				break;
-		}
-	};
+    ws.onmessage = (message) => {
+        try {
+            const data = JSON.parse(message.data);
+            switch (data.type) {
+                case 'stats':
+                    renderStats(data.team);
+                    renderTeamName(data.name);
+                    renderCountryStats(data.country);
+                    break;
+                default:
+                    console.warn(`Unhandled message type: ${data.type}`);
+            }
+        } catch (error) {
+            console.error('Error parsing message:', error);
+        }
+    };
 
-	ws.onclose = () => {
-		console.log("Connection lost, attempting to reconnect...");
-		setTimeout(() => {
-			webSocket = connect();
-		}, 3000);  // Reconnect after a delay
-	}
+    ws.onclose = () => {
+        console.log('Connection lost, attempting to reconnect...');
+        reconnectAttempts = 0;
+        attemptReconnect();
+    };
 
-	return ws;
+    return ws;
+}
+
+let reconnectAttempts = 0;
+const maxReconnectAttempts = 10;
+
+function attemptReconnect() {
+    if (reconnectAttempts < maxReconnectAttempts) {
+        const timeout = Math.pow(2, reconnectAttempts) * 1000; // Exponential backoff
+        setTimeout(() => {
+            reconnectAttempts++;
+            console.log(`Reconnection attempt ${reconnectAttempts}`);
+            webSocket = connect();
+        }, timeout);
+    } else {
+        console.error('Max reconnection attempts reached. Please refresh the page.');
+        alert('Connection lost. Please refresh the page to continue.');
+    }
 }
 
 // Handle LEGO block click
-document.getElementById('lego-block').addEventListener('click', async () => {
-	if (!username) {
-		console.error('No username found in cookie');
-		return;
-	}
-	// Send click event via WebSocket
-	webSocket.send(JSON.stringify({ type: 'click', username }));
-	clickSound.play();  // Play click sound
-});
+const legoBlock = document.getElementById('lego-block');
+if (legoBlock) {
+    legoBlock.setAttribute('tabindex', '0'); // Make it focusable
+
+    // Click event
+    let canClick = true;
+    const clickCooldown = 200; // milliseconds
+
+    legoBlock.addEventListener('click', () => {
+        if (!canClick) return;
+        canClick = false;
+
+        if (!username) {
+            alert('Please log in to continue playing.');
+            window.location.href = '/login';
+            return;
+        }
+        webSocket.send(JSON.stringify({ type: 'click', username }));
+        clickSound.play();
+
+        // Visual feedback
+        legoBlock.classList.add('clicked');
+        setTimeout(() => {
+            legoBlock.classList.remove('clicked');
+            canClick = true;
+        }, clickCooldown);
+    });
+
+    // Keyboard interaction
+    legoBlock.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            legoBlock.click();
+        }
+    });
+}
 
 // Load the click sound
 const clickSound = new Audio('/click.wav');
 
 // Render team stats and update the stats list
 function renderStats(teamStats) {
-	const statsList = document.getElementById('stats-list');
-	statsList.innerHTML = '';  // Clear the existing stats
+    const statsList = document.getElementById('stats-list');
+    if (!statsList) return;
+    statsList.innerHTML = ''; // Clear the existing stats
 
-	teamStats.forEach((stat) => {
-		let listItem = document.querySelector(`li[data-username="${stat.username}"]`);
+    // Sort teamStats by clicks in descending order
+    teamStats.sort((a, b) => b.clicks - a.clicks);
 
-		if (!listItem) {
-			listItem = document.createElement('li');
-			listItem.dataset.username = stat.username;
-			statsList.appendChild(listItem);
-		}
+    teamStats.forEach((stat) => {
+        const listItem = document.createElement('li');
+        listItem.dataset.username = stat.username;
+        listItem.textContent = `${stat.username}: ${stat.clicks} clicks`;
 
-		listItem.dataset.clicks = stat.clicks;
-		listItem.textContent = `${stat.username}: ${stat.clicks} clicks`;
+        // Highlight the user's entry if the username matches
+        if (stat.username === username) {
+            listItem.classList.add('highlight'); // Add highlight class to user
+        }
 
-		// Highlight the user's entry if the username matches
-		if (stat.username === username) {
-			listItem.classList.add('highlight');  // Add highlight class to user
-		} else {
-			listItem.classList.remove('highlight');
-		}
-	});
+        statsList.appendChild(listItem);
+    });
 }
 
 // Render team name
 function renderTeamName(teamName) {
-	const teamNameElement = document.getElementById('team-name');
-	teamNameElement.textContent = teamName;  // Update the team name with the new value
+    const teamNameElement = document.getElementById('team-name');
+    if (teamNameElement) {
+        teamNameElement.textContent = teamName;
+    }
 }
 
 // Render stats by country
 function renderCountryStats(countryStats) {
-	const countryStatsList = document.getElementById('country-stats-list');
-	countryStatsList.innerHTML = '';  // Clear the existing country stats
+    const countryStatsList = document.getElementById('country-stats-list');
+    if (!countryStatsList) return;
+    countryStatsList.innerHTML = ''; // Clear the existing country stats
 
-	// Display stats by country
-	countryStats.forEach((countryStat) => {
-		const listItem = document.createElement('li');
-		listItem.textContent = `${countryStat.country}: ${countryStat.clicks} clicks`;
-		countryStatsList.appendChild(listItem);
-	});
+    // Sort countryStats by clicks in descending order
+    countryStats.sort((a, b) => b.clicks - a.clicks);
+
+    countryStats.forEach((countryStat) => {
+        const listItem = document.createElement('li');
+        listItem.textContent = `${countryStat.country}: ${countryStat.clicks} clicks`;
+        countryStatsList.appendChild(listItem);
+    });
 }

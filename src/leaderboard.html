@@ -2,16 +2,40 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <!-- Meta Description and Open Graph Tags -->
+    <meta name="description" content="Check out the top teams in Clicky Block. Join the fun and compete for the highest score!">
+    <meta property="og:title" content="Clicky Block Leaderboard">
+    <meta property="og:description" content="See who tops the charts in Clicky Block!">
+    <meta property="og:image" content="/images/leaderboard-thumbnail.png">
+    <meta property="og:url" content="https://yourwebsite.com/leaderboard">
+    <meta property="og:type" content="website">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clicky Block Leaderboard</title>
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-    <div class="leaderboard-container">
-        <h1>Leaderboard - Clicky Block</h1>
-        <ul id="leaderboard-list"></ul>
-    </div>
+    <!-- Navigation Bar -->
+    <nav>
+        <ul class="nav-links">
+            <li><a href="/">Home</a></li>
+            <li><a href="/play">Play</a></li>
+            <li><a href="/leaderboard">Leaderboard</a></li>
+        </ul>
+    </nav>
 
+    <main>
+        <div class="leaderboard-container">
+            <h1>Leaderboard - Clicky Block</h1>
+            <!-- Search Input -->
+            <input type="text" id="search-input" placeholder="Search teams...">
+            <ul id="leaderboard-list" role="list" aria-live="polite" aria-label="Leaderboard">
+                <!-- Leaderboard items will be dynamically added here -->
+            </ul>
+        </div>
+    </main>
+
+    <!-- Include utils.js before leaderboard.js -->
+    <script src="/utils.js"></script>
     <script src="/leaderboard.js"></script>
 </body>
 </html>
