@@ -3,32 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clicky Block - Team Page</title>
+    <title>Join Clicky Block</title>
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-    <div class="team-container">
-        <h1>Welcome to Team <span id="team-name"></span>!</h1>
-
-        <!-- LEGO block below the title -->
-        <div class="block-container">
-            <img id="lego-block" src="/block.png" alt="LEGO Block">
-        </div>
-
-        <!-- Flex container for side-by-side stats -->
-        <div class="stats-flex-container">
-            <div class="stats-section">
-                <h2>Team Stats</h2>
-                <ul id="stats-list"></ul> <!-- List for team stats -->
-            </div>
-
-            <div class="country-stats-section">
-                <h2>Stats by Country</h2>
-                <ul id="country-stats-list"></ul> <!-- List for country stats -->
-            </div>
-        </div>
+    <div class="join-container">
+        <h1>Join Clicky Block</h1>
+        <form action="/join" method="POST">
+            <label for="username">Enter your username:</label>
+            <input type="text" id="username" name="username" required>
+            <button type="submit">Join Team</button>
+        </form>
     </div>
-
-    <script src="/script.js"></script>
 </body>
 </html>
