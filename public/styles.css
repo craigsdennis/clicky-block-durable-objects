@@ -245,6 +245,10 @@ main {
     transform: scale(0.95);
 }
 
+.block-container img {
+    touch-action: manipulation;
+}
+
 /* Stats Container */
 .stats-container {
     margin-top: 20px;

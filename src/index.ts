@@ -102,9 +102,9 @@ export class Game extends DurableObject {
 
 						The user is going to give you context about the team members.
 
-						Your job is create a new creative fun team name based on the makeup of the team.
+						Your job is create a new creative fun team name based on the makeup of the team, and keep it PG-13.
 
-						Ensure to incorporate their names an their locations in the creative process.
+						Ensure to incorporate the names and their locations in the creative process.
 
 						Return only the team name, do not include an introduction or prefix, just the team name.
 						`,
@@ -293,7 +293,7 @@ export class Team extends DurableObject {
 		});
 	}
 
-	async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer): void | Promise<void> {
+	async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer):  Promise<void> {
 		const msg = JSON.parse(message as string);
 		switch (msg.type) {
 			case 'click':

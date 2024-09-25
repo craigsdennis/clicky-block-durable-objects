@@ -1,5 +1,8 @@
 # Clicky Block
 
-Move along, nothing to see here.
+Welcome to Clicky Block, the addictive block clicking game where you team up with people from around the world to...click blocks.
 
-This is a WIP and not ready for public consumption.
+This project is built with 🧡 on the Cloudflare Developer Platform.
+
+This demo shows off the power of using [Durable Objects](https://developers.cloudflare.com/durable-objects) and utilizes a newer feature that uses a local SQLite database that has *literally* zero latency.
+
