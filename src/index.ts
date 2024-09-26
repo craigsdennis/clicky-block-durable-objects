@@ -10,7 +10,7 @@ import { isSafe } from './guards';
 // import leaderboardHtml from './leaderboard.html';
 
 const app = new Hono<{ Bindings: Env }>();
-const CURRENT_GAME = 'builderday';
+const CURRENT_GAME = 'jklol';
 // Ten seconds
 const ALARM_TIME = 10 * 1000;
 
