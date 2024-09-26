@@ -2,6 +2,7 @@ import { Context, Hono } from 'hono';
 import { DurableObject } from 'cloudflare:workers';
 import { validator } from 'hono/validator';
 import { getCookie, setCookie } from 'hono/cookie';
+import { isSafe } from './guards';
 
 // @ts-ignore
 // import teamHtml from './team.html';
@@ -120,7 +121,11 @@ export class Game extends DurableObject {
 				}
 			);
 			// @ts-ignore: Why no response?
-			const teamName = results.response;
+			let teamName = results.response;
+			const questionable = await isSafe(this.env, teamName);
+			if (questionable) {
+				teamName = "NSFW pranksters";
+			}
 			console.log('Updating team name:', teamName);
 			// Update team name
 			this.sql.exec(`UPDATE teams SET name=? WHERE id=?`, teamName, row.id);

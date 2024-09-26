@@ -10,10 +10,12 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240909.0",
+    "@types/common-tags": "^1.8.4",
     "typescript": "^5.5.2",
     "wrangler": "^3.78.7"
   },
   "dependencies": {
+    "common-tags": "^1.8.2",
     "hono": "^4.6.2"
   }
 }
