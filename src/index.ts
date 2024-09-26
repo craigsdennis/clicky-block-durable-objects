@@ -92,39 +92,44 @@ export class Game extends DurableObject {
 			const teamStub = await this.getTeamStub(row.id);
 			// Get Player Info
 			const info = await teamStub.getPlayerInfo();
-			// Run AI to generate name
-			const results = await this.env.AI.run(
-				'@cf/meta/llama-3.1-8b-instruct',
-				{
-					messages: [
-						{
-							role: 'system',
-							content: `You are a team name generator for a game called Clicky Block.
-
-						The user is going to give you context about the team members.
-
-						Your job is create a new creative fun team name based on the makeup of the team, and keep it PG-13.
-
-						Ensure to incorporate the names and their locations in the creative process.
-
-						Return only the team name, do not include an introduction or prefix, just the team name.
-						`,
-						},
-						{ role: 'user', content: JSON.stringify(info) },
-					],
-				},
-				{
-					gateway: {
-						id: 'clicky-block',
-						skipCache: true,
-					},
-				}
-			);
-			// @ts-ignore: Why no response?
-			let teamName = results.response;
-			const questionable = await isSafe(this.env, teamName);
+			let questionable = await isSafe(this.env, "user", JSON.stringify(info));
+			let teamName = "";
 			if (questionable) {
 				teamName = "NSFW pranksters";
+			} else {
+
+				// Run AI to generate name
+				const results = await this.env.AI.run(
+					'@cf/meta/llama-3.1-8b-instruct',
+					{
+						messages: [
+							{
+								role: 'system',
+								content: `You are a team name generator for a game called Clicky Block.
+
+							The user is going to give you context about the team members.
+
+							Your job is create a new creative fun team name based on the makeup of the team, and keep it PG-13.
+
+							Ensure to incorporate the names and their locations in the creative process.
+
+							If there are innapropriate names, make the team name something like "NSFW jokesters" or "Naughty newbs".
+
+							Return only the team name, do not include an introduction or prefix, just the team name.
+							`,
+							},
+							{ role: 'user', content: JSON.stringify(info) },
+						],
+					},
+					{
+						gateway: {
+							id: 'clicky-block',
+							skipCache: true,
+						},
+					}
+				);
+				// @ts-ignore: Why no response?
+				teamName = results.response;
 			}
 			console.log('Updating team name:', teamName);
 			// Update team name

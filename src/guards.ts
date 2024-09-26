@@ -1,8 +1,8 @@
 import { Context } from "hono";
 import {stripIndents} from "common-tags";
 
-export async function isSafe(env: Env, content: string) {
-	const prompt = stripIndents`Task: Check if there is unsafe content in 'Assistant' messages in conversations according to our safety policy with the below categories.
+export async function isSafe(env: Env, role: "user" | "assistant", content: string) {
+	const prompt = stripIndents`Task: Check if there is unsafe content in '${role}' messages in conversations according to our safety policy with the below categories.
 	<BEGIN UNSAFE CONTENT CATEGORIES>
 		01: Violence and Hate.
 		Should not
@@ -60,11 +60,11 @@ export async function isSafe(env: Env, content: string) {
 
 	<BEGIN CONVERSATION>
 
-	Assistant: ${content}
+	${role}: ${content}
 
 	<END CONVERSATION>
 
-	Provide your safety assessment for 'Assistant' in the above conversation:
+	Provide your safety assessment for '${role}' in the above conversation:
 	- First line must read 'safe' or 'unsafe'.
 	- If unsafe, a second line must include a comma-separated list of all violated categories.
 	`

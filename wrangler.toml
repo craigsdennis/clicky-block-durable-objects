@@ -2,7 +2,7 @@
 name = "clicky-block"
 main = "src/index.ts"
 compatibility_date = "2024-09-09"
-experimental_assets = { directory = "./public", binding = "ASSETS" }
+assets = { directory = "./public", binding = "ASSETS" }
 
 
 # Automatically place your workloads in an optimal location to minimize latency.
